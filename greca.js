@@ -53,21 +53,30 @@
   /* ---------- Magnetic buttons ---------- */
   if(FINE && !REDUCED){
     document.querySelectorAll('[data-magnetic]').forEach(el=>{
-      const strength = 0.32, radius = 78;
+      const big = el.classList.contains('cat');     // tarjetas grandes de la colección
+      const strength = big ? 0.09 : 0.3;            // mucha menos fuerza en las grandes
+      const ease = big ? 0.07 : 0.16;               // interpolación más lenta = más suave
+      const radius = 78;
+      let tx = 0, ty = 0, cx = 0, cy = 0, active = false, raf = null;
+      function tick(){
+        cx += (tx - cx) * ease;
+        cy += (ty - cy) * ease;
+        const settled = Math.abs(tx - cx) < 0.1 && Math.abs(ty - cy) < 0.1;
+        if(settled){ cx = tx; cy = ty; }
+        if(!active && settled){ el.style.transform = ''; raf = null; return; }
+        el.style.transform = `translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
+        raf = settled ? null : requestAnimationFrame(tick);
+      }
+      function start(){ if(!raf) raf = requestAnimationFrame(tick); }
       el.addEventListener('mousemove', e=>{
         const r = el.getBoundingClientRect();
         const mx = e.clientX - (r.left + r.width/2);
         const my = e.clientY - (r.top + r.height/2);
-        const dist = Math.hypot(mx,my);
-        if(dist < radius + Math.max(r.width,r.height)/2){
-          el.style.transform = `translate(${mx*strength}px, ${my*strength}px)`;
+        if(Math.hypot(mx,my) < radius + Math.max(r.width,r.height)/2){
+          tx = mx*strength; ty = my*strength; active = true; start();
         }
       });
-      el.addEventListener('mouseleave', ()=>{
-        el.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)';
-        el.style.transform = '';
-        setTimeout(()=> el.style.transition = '', 600);
-      });
+      el.addEventListener('mouseleave', ()=>{ tx = 0; ty = 0; active = false; start(); });
     });
   }
 
@@ -311,8 +320,13 @@
       car.addEventListener('pointerleave', ()=>{ hovering = false; updatePause(); });
     }
 
-    // arranca DESPUÉS del reveal de entrada de la máscara
-    gsap.delayedCall(2.6, ()=>{ kenBurns(slides[0], 0, true); queueNext(); });
+    // arranca DESPUÉS del reveal de entrada de la máscara.
+    // La primera slide se sostiene menos para que el carrusel "tome vida" pronto.
+    gsap.delayedCall(2.2, ()=>{
+      kenBurns(slides[0], 0, true);
+      call = gsap.delayedCall(2.4, advance);
+      if(!visible || hovering) call.pause();
+    });
   })();
 
   /* ---- Line reveals on scroll (section H2s) ---- */
@@ -372,14 +386,14 @@
     const ramp = (p,a,b)=> gsap.utils.clamp(0, 1, (p-a)/(b-a));
 
     function apply(p){
-      // óxido baja 0.30–0.42 ; arena sube 0.30–0.42 y baja 0.62–0.74 ; crudo sube 0.62–0.74
-      const o1 = 1 - ramp(p,0.30,0.42);
-      const o2 = ramp(p,0.30,0.42) * (1 - ramp(p,0.62,0.74));
-      const o3 = ramp(p,0.62,0.74);
+      // óxido se sostiene al entrar; crudo se sostiene al salir. Transiciones más espaciadas.
+      const o1 = 1 - ramp(p,0.34,0.46);
+      const o2 = ramp(p,0.34,0.46) * (1 - ramp(p,0.66,0.78));
+      const o3 = ramp(p,0.66,0.78);
       imgs[0].style.opacity = o1;
       imgs[1].style.opacity = o2;
       imgs[2].style.opacity = o3;
-      const active = p < 0.40 ? 0 : (p <= 0.70 ? 1 : 2);
+      const active = p < 0.44 ? 0 : (p <= 0.72 ? 1 : 2);
       if(active !== apply._a){
         apply._a = active;
         swatches.forEach((s,i)=> s.classList.toggle('is-active', i===active));

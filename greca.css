@@ -393,10 +393,10 @@ img{ display:block; max-width:100%; }
   overflow:hidden;
 }
 .cat-frame{ overflow:hidden; position:relative; }
-.cat-frame img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease-out); will-change:transform; }
-.cat:hover .cat-frame img{ transform:scale(1.05); }
+.cat-frame img{ width:100%; height:100%; object-fit:cover; transition:transform 1.4s cubic-bezier(.33,0,.18,1); will-change:transform; }
+.cat:hover .cat-frame img{ transform:scale(1.045); }
 .cat-meta{ display:flex; justify-content:space-between; align-items:baseline; margin-top:18px; gap:14px; }
-.cat-name{ font-family:var(--serif); font-weight:360; font-size:clamp(1.5rem,2.4vw,2.1rem); transition:color .5s var(--ease-out); }
+.cat-name{ font-family:var(--serif); font-weight:360; font-size:clamp(1.5rem,2.4vw,2.1rem); transition:color .7s cubic-bezier(.33,0,.18,1); }
 .cat:hover .cat-name{ color:var(--oxido); }
 .cat-desc{ font-size:.9rem; color:var(--tinta-60); text-align:right; max-width:18ch; }
 .cat-idx{ position:absolute; top:14px; left:14px; z-index:2; font-size:.7rem; letter-spacing:.14em; color:var(--crema); mix-blend-mode:difference; }
@@ -451,7 +451,7 @@ img{ display:block; max-width:100%; }
    Pieza destacada (5.7)
    ============================================================ */
 .featured-section{ position:relative; }
-.featured-runway{ min-height:185vh; }
+.featured-runway{ min-height:300vh; }
 .featured{ position:sticky; top:0; min-height:100vh; display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(40px,6vw,100px); align-content:center; align-items:center; max-width:var(--maxw); margin-inline:auto; padding-inline:var(--pad-x); padding-block:clamp(40px,8vh,90px); }
 .featured-fig{ position:relative; overflow:hidden; aspect-ratio:4/5; max-height:74vh; background:var(--lino); }
 .featured-fig .ff-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; will-change:opacity; }
@@ -485,7 +485,7 @@ img{ display:block; max-width:100%; }
 .valores-fig .vf-img[data-vf="1"],
 .valores-fig .vf-img[data-vf="2"]{ opacity:0; }
 .valores h2{ font-size:clamp(2.4rem,4.6vw,4.2rem); margin-bottom:clamp(40px,5vw,64px); }
-.pilares{ display:grid; gap:clamp(120px,32vh,360px); padding-block:clamp(80px,28vh,320px); }
+.pilares{ display:grid; gap:clamp(120px,32vh,360px); padding-block:clamp(80px,28vh,320px) clamp(200px,62vh,640px); }
 .pilar{ display:grid; grid-template-columns:64px 1fr; gap:24px; align-items:start; opacity:.4; transition:opacity .5s var(--ease-out); }
 .pilar.is-active{ opacity:1; }
 .pilar svg{ width:46px; height:46px; color:var(--tinta-40); transition:color .5s var(--ease-out); }
