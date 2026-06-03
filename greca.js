@@ -82,7 +82,10 @@
 
   /* ---------- Smooth scroll (Lenis) ---------- */
   let lenis = null;
-  if(!REDUCED && window.Lenis){
+  // Lenis sólo en punteros finos (desktop). En táctil no suaviza el scroll
+  // (smoothTouch off por defecto) y su rAF perpetuo sólo resta fluidez: dejamos
+  // el scroll nativo con su inercia, que en móvil es más suave.
+  if(!REDUCED && FINE && window.Lenis){
     lenis = new Lenis({ duration:1.15, easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)), smoothWheel:true });
     function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
     requestAnimationFrame(raf);
@@ -228,7 +231,7 @@
     const hero = document.getElementById('top');
     if(!cv || !cv.getContext || !hero) return;          // fallback: gradiente base
     const ctx = cv.getContext('2d');
-    let W=0, H=0, dpr=Math.min(devicePixelRatio||1, 1.5);
+    let W=0, H=0, dpr=Math.min(devicePixelRatio||1, window.innerWidth<700 ? 1 : 1.5);
     let scrollY = window.scrollY || 0;
 
     // Fibras de lino: tonos apenas más oscuros que el fondo (--crema #F3ECE1).
@@ -351,7 +354,19 @@
       }
     }
 
-    if(REDUCED){ frame(); return; }              // un solo frame estático
+    // En táctil no hay cursor que reaccione: el movimiento ambiente es
+    // imperceptible y un canvas repintando sin parar resta fluidez en la carga
+    // y el scroll. Render estático (igual que en reduced-motion).
+    if(REDUCED || !FINE){
+      frame();                                   // un solo frame estático
+      // re-render al rotar/redimensionar (sin loop perpetuo)
+      let srt;
+      addEventListener('resize', ()=>{ clearTimeout(srt); srt=setTimeout(()=>{
+        dpr=Math.min(devicePixelRatio||1, window.innerWidth<700 ? 1 : 1.5);
+        resize(); build(); frame();
+      }, 200); });
+      return;
+    }
 
     let running = true, raf;
     function loop(){ if(running){ frame(); } raf = requestAnimationFrame(loop); }
@@ -362,7 +377,7 @@
         .observe(hero);
     }
     let rt;
-    addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(()=>{ dpr=Math.min(devicePixelRatio||1,1.5); resize(); build(); }, 200); });
+    addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(()=>{ dpr=Math.min(devicePixelRatio||1, window.innerWidth<700 ? 1 : 1.5); resize(); build(); }, 200); });
   })();
 
   /* ====================== GSAP ====================== */
@@ -678,16 +693,24 @@
     track.parentElement.addEventListener('mouseleave', ()=> paused = false);
     if(lenis){ lenis.on('scroll', ({velocity})=>{ vel = Math.min(Math.abs(velocity)*0.04, 4); }); }
     else { addEventListener('scroll', ()=>{ vel = Math.min(Math.abs(scrollY-last)*0.12,4); last = scrollY; }); }
-    (function loop(){
-      if(!REDUCED){
-        const speed = paused ? 0 : (base + vel);
-        x -= speed; vel *= 0.92;
-        const w = unitW();
-        if(w && -x >= w) x += w;
-        track.style.transform = `translateX(${x}px)`;
-      }
-      requestAnimationFrame(loop);
-    })();
+    if(REDUCED) return;                 // sin animación: marquee estático
+    let vis = true, raf = null;
+    function loop(){
+      const speed = paused ? 0 : (base + vel);
+      x -= speed; vel *= 0.92;
+      const w = unitW();
+      if(w && -x >= w) x += w;
+      track.style.transform = `translateX(${x}px)`;
+      raf = vis ? requestAnimationFrame(loop) : null;
+    }
+    // pausar el rAF cuando el marquee no está en pantalla
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(es=>{
+        vis = es[0].isIntersecting;
+        if(vis && !raf) raf = requestAnimationFrame(loop);
+      }, {threshold:0}).observe(track.parentElement);
+    }
+    raf = requestAnimationFrame(loop);
   })();
 
   /* ---- Scroll-velocity warp (subtle skew) ---- */

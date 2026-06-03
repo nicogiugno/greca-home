@@ -30,7 +30,7 @@
 
 *{ box-sizing:border-box; margin:0; padding:0; }
 
-html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; scroll-padding-top:80px; }
 
 body{
   font-family:var(--sans);
@@ -145,6 +145,13 @@ img{ display:block; max-width:100%; }
   66%{transform:translate(4%,2%)} 83%{transform:translate(-2%,-3%)}
   100%{transform:translate(0,0)}
 }
+/* En touch el grano queda estático: una capa multiply animada a pantalla
+   completa es el mayor causante de jank en móvil. Se compone una sola vez. */
+@media (hover:none){
+  .grain{ animation:none; opacity:.05; }
+  /* sin will-change donde el efecto (hover) no existe en táctil */
+  .btn, .post, .cat-frame img, .post-fig img{ will-change:auto; }
+}
 
 /* ============================================================
    Header
@@ -254,6 +261,12 @@ img{ display:block; max-width:100%; }
 @media (max-width:780px){
   .nav-links{ display:none; }
   .nav-toggle{ display:flex; }
+  /* sin backdrop-filter en móvil: el blur repinta en cada scroll y traba.
+     Un fondo más opaco da el mismo efecto de separación sin coste. */
+  .site-header.is-stuck{
+    background:rgba(243,236,225,.94);
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
 }
 @media (min-width:781px){
   .mobile-menu{ display:none; }
