@@ -89,19 +89,135 @@
     window.__lenis = lenis;
   }
   // anchor links
+  function smoothScrollTo(t){
+    if(!t) return;
+    if(lenis){
+      const startY = lenis.scroll || window.scrollY;
+      const destY  = t.getBoundingClientRect().top + startY - 60;
+      const dist   = Math.abs(destY - startY);
+      const dur    = Math.min(2.6, Math.max(1.1, dist / 1400));   // duración proporcional a la distancia
+      lenis.scrollTo(destY, {
+        duration: dur,
+        easing: x => x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2     // easeInOutCubic: arranque y frenado suaves
+      });
+    } else {
+      t.scrollIntoView({behavior:'smooth'});
+    }
+  }
+  window.__grecaScrollTo = smoothScrollTo;
+
   document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    if(a.classList.contains('cat')) return;     // las tarjetas de colección no navegan
+    if(a.classList.contains('mm-link')) return; // el menú mobile gestiona su propio scroll al cerrarse
     a.addEventListener('click', e=>{
       const id = a.getAttribute('href');
       if(id.length<2) return;
       const t = document.querySelector(id);
       if(!t) return;
       e.preventDefault();
-      if(lenis) lenis.scrollTo(t, { offset:-60 });
-      else t.scrollIntoView({behavior:'smooth'});
+      smoothScrollTo(t);
     });
   });
 
-  /* ---------- Sticky header morph ---------- */
+  /* ---------- Scroll-spy: marca la sección activa en el menú ---------- */
+  (function scrollSpy(){
+    const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"], .mobile-menu .mm-link'));
+    const items = links.map(a=>{
+      const sec = document.querySelector(a.getAttribute('href'));
+      return sec ? { a, sec } : null;
+    }).filter(Boolean);
+    if(!items.length) return;
+
+    let current = null;
+    function update(){
+      // línea de referencia: justo debajo del header fijo
+      const line = (document.getElementById('header')?.offsetHeight || 80) + 40;
+      let active = items[0];
+      for(const it of items){
+        if(it.sec.getBoundingClientRect().top <= line) active = it;
+      }
+      // si estamos al fondo de la página, fuerza el último (Contacto)
+      if(window.innerHeight + window.scrollY >= document.body.scrollHeight - 4){
+        active = items[items.length-1];
+      }
+      if(active === current) return;
+      current = active;
+      items.forEach(it=> it.a.classList.toggle('is-current', it === active));
+    }
+    if(lenis) lenis.on('scroll', update);
+    addEventListener('scroll', update, { passive:true });
+    addEventListener('resize', update);
+    update();
+  })();
+
+  /* ---------- Menú mobile (hamburguesa) ---------- */
+  (function mobileMenu(){
+    const toggle = document.getElementById('navToggle');
+    const menu   = document.getElementById('mobileMenu');
+    if(!toggle || !menu) return;
+    let open = false;
+
+    function setOpen(state){
+      open = state;
+      toggle.classList.toggle('is-open', open);
+      menu.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+      document.documentElement.style.overflow = open ? 'hidden' : '';
+      if(lenis){ open ? lenis.stop() : lenis.start(); }
+    }
+
+    toggle.addEventListener('click', ()=> setOpen(!open));
+    // al tocar un enlace: cerrar el menú y luego desplazar suavemente a la sección
+    menu.querySelectorAll('.mm-link').forEach(a=>{
+      a.addEventListener('click', e=>{
+        e.preventDefault();
+        const t = document.querySelector(a.getAttribute('href'));
+        setOpen(false);                          // reanuda lenis + libera el scroll
+        requestAnimationFrame(()=> smoothScrollTo(t));   // tras reanudar, desplaza
+      });
+    });
+    addEventListener('keydown', e=>{ if(e.key==='Escape' && open) setOpen(false); });
+    matchMedia('(min-width:781px)').addEventListener('change', e=>{ if(e.matches && open) setOpen(false); });
+  })();
+
+  /* ---------- Modal demo / contacto (VisualNova) ---------- */
+  (function demoModal(){
+    const modal = document.getElementById('demoModal');
+    if(!modal) return;
+    let open = false, lastFocus = null;
+
+    function setOpen(state){
+      open = state;
+      modal.classList.toggle('is-open', open);
+      modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+      document.documentElement.style.overflow = open ? 'hidden' : '';
+      if(lenis){ open ? lenis.stop() : lenis.start(); }
+      if(open){
+        lastFocus = document.activeElement;
+        const c = modal.querySelector('.demo-close'); if(c) c.focus();
+      } else if(lastFocus && lastFocus.focus){ lastFocus.focus(); }
+    }
+    window.__openDemo = ()=> setOpen(true);
+
+    // Enlaces/botones que no llevan a ningún lado de la página
+    const DEAD = 'a[href="#"]:not(.wordmark), .cat-pop-cta, .post, [data-demo]';
+    document.addEventListener('click', e=>{
+      // cerrar (scrim o botón ✕)
+      if(e.target.closest('[data-demo-close]')){ if(open){ e.preventDefault(); setOpen(false); } return; }
+      // clicks dentro de la tarjeta (links de contacto reales) no se interceptan
+      if(e.target.closest('.demo-card')) return;
+      const trigger = e.target.closest(DEAD);
+      if(!trigger) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(true);
+    }, true);  // captura: se adelanta a la navegación y a los toggles de las tarjetas
+
+    addEventListener('keydown', e=>{ if(e.key==='Escape' && open) setOpen(false); });
+  })();
+
   const header = document.getElementById('header');
   const onScrollHeader = ()=> header.classList.toggle('is-stuck', scrollY > 70);
   addEventListener('scroll', onScrollHeader); onScrollHeader();
@@ -113,9 +229,21 @@
     if(!cv || !cv.getContext || !hero) return;          // fallback: gradiente base
     const ctx = cv.getContext('2d');
     let W=0, H=0, dpr=Math.min(devicePixelRatio||1, 1.5);
-    const COLORS = ['#D8C7AC','#C2A878','#9C572F'];      // lino / arena / óxido
-    const N = window.innerWidth < 700 ? 90 : 170;
-    let strands = [];
+    let scrollY = window.scrollY || 0;
+
+    // Fibras de lino: tonos apenas más oscuros que el fondo (--crema #F3ECE1).
+    // Casi monocromas, con algún hilo cálido (cuero) muy tenue.
+    const INK  = '43,37,32';     // --tinta
+    const WARM = '107,66,38';    // --cuero
+
+    // Capas de profundidad: el fondo es más tenue/fino/lento; el frente, un punto más presente.
+    const isPhone = window.innerWidth < 700;
+    const LAYERS = [
+      { count: isPhone? 5:8, width:0.6,  alpha:0.055, amp:5,  speed:0.10, parallax:0.018 },
+      { count: isPhone? 5:8, width:0.85, alpha:0.082, amp:8,  speed:0.13, parallax:0.040 },
+      { count: isPhone? 4:7, width:1.1,  alpha:0.120, amp:12, speed:0.16, parallax:0.075 }
+    ];
+    let threads = [];
 
     function resize(){
       const r = hero.getBoundingClientRect();
@@ -124,27 +252,44 @@
       cv.style.width = W+'px'; cv.style.height = H+'px';
       ctx.setTransform(dpr,0,0,dpr,0,0);
     }
+
     function build(){
-      strands = [];
-      for(let i=0;i<N;i++){
-        const len = 60 + Math.random()*220;
-        const ang = (Math.random()*0.7 - 0.35) + (Math.random()<0.5?0:Math.PI); // mostly horizontal-ish
-        strands.push({
-          x: Math.random()*W, y: Math.random()*H,
-          ox:0, oy:0,                       // desplazamiento por repulsión
-          len, ang,
-          curve:(Math.random()*0.5-0.25),
-          w: 0.6 + Math.random()*0.8,
-          a: 0.10 + Math.random()*0.12,
-          c: COLORS[(Math.random()*COLORS.length)|0],
-          ph: Math.random()*Math.PI*2,
-          sp: 0.2 + Math.random()*0.5
-        });
-      }
+      threads = [];
+      const MARGIN = W*0.14;                  // los hilos entran y salen del cuadro
+      const span = W + MARGIN*2;
+      const step = Math.max(46, W/16);        // separación entre puntos de control
+      const segs = Math.max(8, Math.round(span/step));
+      LAYERS.forEach((L, li)=>{
+        for(let i=0;i<L.count;i++){
+          const baseY = (H/(L.count+1))*(i+1) + (Math.random()*2-1)*H*0.045;
+          const slope = (Math.random()*2-1)*0.055;       // leve inclinación
+          const weave = 0.7 + Math.random()*1.1;          // ondulación tejida (estática)
+          const wf    = 0.0015 + Math.random()*0.0015;    // frecuencia del tejido
+          const ph0   = Math.random()*Math.PI*2;
+          const warm  = Math.random() < 0.16;
+          const pts = [];
+          for(let j=0;j<=segs;j++){
+            const x = -MARGIN + (span/segs)*j;
+            const y = baseY + slope*(x - W/2) + Math.sin(x*wf + ph0)*L.amp*weave*0.45;
+            pts.push({ bx:x, by:y, dx:0, dy:0, fx:x, fy:y });  // dx/dy = brisa (eased)
+          }
+          threads.push({
+            pts, layer:li,
+            w: L.width*(0.85+Math.random()*0.4),
+            alpha: L.alpha*(0.8+Math.random()*0.5),
+            color: warm? WARM : INK,
+            phase: Math.random()*Math.PI*2,
+            speed: L.speed*(0.85+Math.random()*0.3),
+            amp: L.amp, parallax: L.parallax,
+            wob: 0.0009 + Math.random()*0.0008
+          });
+        }
+      });
     }
     resize(); build();
 
-    let mx=-9999, my=-9999, t=0;
+    // brisa: el cursor se sigue con mucha inercia → corriente de aire lenta
+    let mx=-9999, my=-9999, wx=-9999, wy=-9999, t=0;
     if(FINE){
       hero.addEventListener('mousemove', e=>{
         const r = hero.getBoundingClientRect();
@@ -152,44 +297,58 @@
       });
       hero.addEventListener('mouseleave', ()=>{ mx=-9999; my=-9999; });
     }
+    addEventListener('scroll', ()=>{ scrollY = window.scrollY || 0; }, {passive:true});
 
-    function drawStrand(s, drift){
-      const dx = Math.cos(s.ang), dy = Math.sin(s.ang);
-      const nx = -dy, ny = dx;                       // normal
-      const bow = s.curve * s.len;
-      const x0 = s.x + s.ox, y0 = s.y + s.oy + drift;
-      const x1 = x0 + dx*s.len, y1 = y0 + dy*s.len;
-      const cxp = (x0+x1)/2 + nx*bow, cyp = (y0+y1)/2 + ny*bow;
-      ctx.beginPath();
-      ctx.moveTo(x0,y0);
-      ctx.quadraticCurveTo(cxp,cyp,x1,y1);
-      ctx.lineWidth = s.w; ctx.strokeStyle = s.c; ctx.globalAlpha = s.a;
-      ctx.stroke();
-    }
+    const SIGMA = 155, SIG2 = 2*SIGMA*SIGMA;   // alcance de la brisa
+    const LIFT  = 24;                          // cuánto se ahueca la tela
 
     function frame(){
-      t += 0.005;
+      t += 0.006;
       ctx.clearRect(0,0,W,H);
-      ctx.lineCap='round';
-      for(const s of strands){
-        // deriva orgánica
-        const drift = Math.sin(t*s.sp + s.ph)*6;
-        // repulsión del cursor (con easing de retorno)
-        if(FINE){
-          const cx = s.x - mx, cy = s.y - my;
-          const d = Math.hypot(cx,cy);
-          const R = 140;
-          if(d < R){
-            const f = (1 - d/R);
-            s.ox += ((cx/ (d||1)) * f * 26 - s.ox)*0.12;
-            s.oy += ((cy/ (d||1)) * f * 26 - s.oy)*0.12;
-          } else {
-            s.ox += (0 - s.ox)*0.06; s.oy += (0 - s.oy)*0.06;
+      ctx.lineCap='round'; ctx.lineJoin='round';
+
+      // el viento sigue al cursor con fuerte inercia (lento, fluido)
+      if(FINE && mx>-9000){
+        if(wx<-9000){ wx=mx; wy=my; }
+        wx += (mx-wx)*0.045; wy += (my-wy)*0.045;
+      } else { wx=-9999; wy=-9999; }
+
+      for(const th of threads){
+        const pts = th.pts, n = pts.length;
+        const par = -scrollY * th.parallax;            // deriva lenta al hacer scroll
+        const kf  = (th.layer+1)/3;                    // el frente reacciona más
+        for(let k=0;k<n;k++){
+          const p = pts[k];
+          // respiración ambiente: onda viajera lenta (la tela respira)
+          const amb = Math.sin(t*th.speed + th.phase + p.bx*th.wob)*th.amp
+                    + Math.sin(t*th.speed*0.6 + p.bx*th.wob*0.5)*th.amp*0.28;
+          // brisa del cursor: ahueca la tela alrededor, suave y direccional
+          let tx=0, ty=0;
+          if(wx>-9000){
+            const ddx = p.bx - wx, ddy = (p.by+amb+par) - wy;
+            const infl = Math.exp(-(ddx*ddx + ddy*ddy)/SIG2);
+            if(infl>0.001){
+              ty -= infl*LIFT*kf;                      // se levanta hacia la corriente
+              tx += (ddx>=0?1:-1)*infl*LIFT*0.42*kf;   // y se abre a los lados
+            }
           }
+          // easing lento hacia el objetivo → retorno suave al soltar
+          p.dx += (tx - p.dx)*0.045;
+          p.dy += (ty - p.dy)*0.045;
+          p.fx = p.bx + p.dx;
+          p.fy = p.by + amb + par + p.dy;
         }
-        drawStrand(s, drift);
+        // curva suave a través de los puntos (midpoints)
+        ctx.beginPath();
+        ctx.moveTo(pts[0].fx, pts[0].fy);
+        for(let k=1;k<n-1;k++){
+          const mpx=(pts[k].fx+pts[k+1].fx)/2, mpy=(pts[k].fy+pts[k+1].fy)/2;
+          ctx.quadraticCurveTo(pts[k].fx, pts[k].fy, mpx, mpy);
+        }
+        ctx.quadraticCurveTo(pts[n-2].fx, pts[n-2].fy, pts[n-1].fx, pts[n-1].fy);
+        ctx.lineWidth = th.w; ctx.strokeStyle = `rgba(${th.color},${th.alpha})`;
+        ctx.globalAlpha = 1; ctx.stroke();
       }
-      ctx.globalAlpha = 1;
     }
 
     if(REDUCED){ frame(); return; }              // un solo frame estático
@@ -216,6 +375,9 @@
   document.documentElement.classList.add('js-ready');
   gsap.registerPlugin(ScrollTrigger);
   if(lenis) lenis.on('scroll', ScrollTrigger.update);
+  // Red de seguridad en táctil: Lenis usa scroll nativo en mobile; garantizamos
+  // que los ScrollTriggers (reveals, parallax, scrubs) se actualicen igualmente.
+  if(!FINE) addEventListener('scroll', ()=> ScrollTrigger.update(), { passive:true });
 
   /* ---- Hero intro: liquid mask reveal + line reveal + ctas ---- */
   const introTl = gsap.timeline({ defaults:{ ease:'power4.out' }, delay:0.15 });
@@ -227,7 +389,7 @@
       gsap.set(mask,{clipPath:'inset(0 0 0 0)',opacity:1});
     } else {
       gsap.set(mask,{ clipPath:'inset(38% 30% 38% 30% round 50%)', opacity:0 });
-      introTl.to(mask, { clipPath:'inset(0% 0% 0% 0% round 46% 54% 48% 52% / 58% 42% 58% 42%)', opacity:1, duration:1.5, ease:'expo.out' }, 0);
+      introTl.to(mask, { clipPath:'inset(0% 0% 0% 0% round 48% 48% 9% 9% / 34% 34% 6% 6%)', opacity:1, duration:1.5, ease:'expo.out' }, 0);
       introTl.from(heroImg, { scale:1.28, duration:1.8, ease:'expo.out' }, 0);
     }
   }
@@ -543,6 +705,13 @@
     if(!im.complete) im.addEventListener('load', ()=> ScrollTrigger.refresh(), {once:true});
   });
 
+  // El pin horizontal de "El look" agranda la página (pin-spacer) DESPUÉS de que
+  // Lenis calculó su límite de scroll → re-sincronizamos Lenis tras cada refresh,
+  // si no el footer/Contacto quedan inalcanzables y los reveals del fondo no disparan.
+  if(lenis){
+    ScrollTrigger.addEventListener('refresh', ()=> lenis.resize());
+  }
+
   ScrollTrigger.refresh();
-  window.addEventListener('load', ()=> ScrollTrigger.refresh());
+  window.addEventListener('load', ()=>{ ScrollTrigger.refresh(); if(lenis) lenis.resize(); });
 })();

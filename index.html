@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GRECA — Vestir con calma</title>
 <meta name="description" content="GRECA — Un guardarropa atemporal en fibras naturales. Estudio de indumentaria, Mendoza, Argentina.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232B2520'/%3E%3Ctext x='32' y='33' font-family='Georgia, Times New Roman, serif' font-size='44' font-weight='400' fill='%23F3ECE1' text-anchor='middle' dominant-baseline='central'%3EG%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,15 +22,35 @@
   <nav class="nav" aria-label="Principal">
     <div class="nav-links">
       <a href="#coleccion">Colección</a>
-      <a href="#estudio">Estudio</a>
+      <a href="#destacada">Destacado</a>
+      <a href="#porque">Nosotros</a>
       <a href="#diario">Diario</a>
       <a href="#contacto">Contacto</a>
     </div>
     <a href="#" class="nav bag" data-magnetic aria-label="Bolsa">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
     </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
   </nav>
 </header>
+
+<!-- ============ MENÚ MOBILE ============ -->
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <nav class="mobile-menu-inner" aria-label="Menú principal móvil">
+    <a class="mm-link" href="#coleccion"><span class="mm-num">02</span><span class="mm-label">Colección</span></a>
+    <a class="mm-link" href="#destacada"><span class="mm-num">04</span><span class="mm-label">Destacado</span></a>
+    <a class="mm-link" href="#porque"><span class="mm-num">05</span><span class="mm-label">Nosotros</span></a>
+    <a class="mm-link" href="#diario"><span class="mm-num">06</span><span class="mm-label">Diario</span></a>
+    <a class="mm-link" href="#contacto"><span class="mm-num">—</span><span class="mm-label">Contacto</span></a>
+  </nav>
+  <div class="mobile-menu-foot">
+    <span>SLOW FASHION · MENDOZA</span>
+    <span>GRECA ©</span>
+  </div>
+</div>
 
 <!-- ============ HERO (5.2) ============ -->
 <section class="hero" id="top">
@@ -44,7 +65,6 @@
     <p class="body-lg hero-sub" data-fade>Un guardarropa atemporal en fibras naturales. Pensado para acompañarte estación tras estación.</p>
     <div class="hero-ctas" data-fade>
       <a href="#coleccion" class="btn btn-primary" data-magnetic>Ver colección <span class="arrow">→</span></a>
-      <a href="#estudio" class="btn btn-ghost" data-magnetic>Conocer el estudio</a>
     </div>
   </div>
   <div class="hero-figure">
@@ -80,7 +100,6 @@
         <span class="reveal-line"><span>Mejores <em>decisiones.</em></span></span>
       </h2>
       <p class="body-md" data-fade>Diseñamos piezas que no compiten con el tiempo. Cada prenda nace para combinarse con las demás, resistir el uso y seguir teniendo sentido temporada tras temporada. Creemos en armar un guardarropa con criterio: comprar menos y elegir mejor.</p>
-      <p style="margin-top:32px" data-fade><a href="#estudio" class="link-arrow" data-magnetic>Nuestra filosofía →</a></p>
     </div>
   </div>
 </section>
@@ -108,22 +127,22 @@
     <div class="grid-cat">
       <a href="#coleccion" class="cat cat-a" data-magnetic>
         <span class="cat-idx">01 — KNITWEAR</span>
-        <div class="cat-frame"><img src="assets/img/5.1.png" alt="Tejido de punto en tono óxido, doblado sobre madera clara."></div>
+        <div class="cat-frame"><img src="assets/img/5.1.png" alt="Tejido de punto en tono óxido, doblado sobre madera clara."><div class="cat-pop" aria-hidden="true"><span class="cat-pop-hd">Piezas de la cápsula</span><ul class="cat-pop-list"><li><span class="dot" style="--c:var(--oxido)"></span><span class="nm">Sweater Greca</span><span class="vr">Óxido</span></li><li><span class="dot" style="--c:var(--arena)"></span><span class="nm">Polera fina</span><span class="vr">Arena</span></li><li><span class="dot" style="--c:var(--hueso)"></span><span class="nm">Cardigan trenza</span><span class="vr">Crudo</span></li><li><span class="dot" style="--c:var(--oliva)"></span><span class="nm">Chaleco de punto</span><span class="vr">Oliva</span></li></ul><span class="cat-pop-cta">Ver knitwear <span>→</span></span></div></div>
         <div class="cat-meta"><span class="cat-name">Knitwear</span><span class="cat-desc">Tejidos con peso y textura.</span></div>
       </a>
       <a href="#coleccion" class="cat cat-b" data-magnetic>
         <span class="cat-idx">02 — ABRIGOS</span>
-        <div class="cat-frame"><img src="assets/img/1.png" alt="Perchero de cobre con looks completos: tapados, tejidos y borrego."></div>
+        <div class="cat-frame"><img src="assets/img/1.png" alt="Perchero de cobre con looks completos: tapados, tejidos y borrego."><div class="cat-pop" aria-hidden="true"><span class="cat-pop-hd">Piezas de la cápsula</span><ul class="cat-pop-list"><li><span class="dot" style="--c:var(--arena)"></span><span class="nm">Tapado de lino</span><span class="vr">Arena</span></li><li><span class="dot" style="--c:var(--hueso)"></span><span class="nm">Trench largo</span><span class="vr">Crudo</span></li><li><span class="dot" style="--c:var(--cuero)"></span><span class="nm">Saco oversize</span><span class="vr">Cuero</span></li></ul><span class="cat-pop-cta">Ver abrigos <span>→</span></span></div></div>
         <div class="cat-meta"><span class="cat-name">Abrigos</span><span class="cat-desc">Capas que estructuran el look.</span></div>
       </a>
       <a href="#coleccion" class="cat cat-c" data-magnetic>
         <span class="cat-idx">03 — PANTALONES</span>
-        <div class="cat-frame"><img src="assets/img/4.1.png" alt="Pantalones de lino y sastrería en tonos arena."></div>
+        <div class="cat-frame"><img src="assets/img/4.1.png" alt="Pantalones de lino y sastrería en tonos arena."><div class="cat-pop" aria-hidden="true"><span class="cat-pop-hd">Piezas de la cápsula</span><ul class="cat-pop-list"><li><span class="dot" style="--c:var(--arena)"></span><span class="nm">Sastre de lino</span><span class="vr">Arena</span></li><li><span class="dot" style="--c:var(--hueso)"></span><span class="nm">Wide leg</span><span class="vr">Crudo</span></li><li><span class="dot" style="--c:#46535f"></span><span class="nm">Denim recto</span><span class="vr">Índigo</span></li></ul><span class="cat-pop-cta">Ver pantalones <span>→</span></span></div></div>
         <div class="cat-meta"><span class="cat-name">Pantalones</span><span class="cat-desc">Cortes que duran años.</span></div>
       </a>
       <a href="#coleccion" class="cat cat-d" data-magnetic>
         <span class="cat-idx">04 — ESENCIALES</span>
-        <div class="cat-frame"><img src="assets/img/7.png" alt="Perchero en primer plano con prendas en tonos neutros."></div>
+        <div class="cat-frame"><img src="assets/img/7.png" alt="Perchero en primer plano con prendas en tonos neutros."><div class="cat-pop cat-pop--wide" aria-hidden="true"><span class="cat-pop-hd">Piezas de la cápsula</span><ul class="cat-pop-list"><li><span class="dot" style="--c:var(--hueso)"></span><span class="nm">Camisa de lino</span><span class="vr">Crudo</span></li><li><span class="dot" style="--c:var(--lino)"></span><span class="nm">Remera de algodón</span><span class="vr">Hueso</span></li><li><span class="dot" style="--c:var(--oxido)"></span><span class="nm">Pañuelo tejido</span><span class="vr">Óxido</span></li><li><span class="dot" style="--c:var(--oliva)"></span><span class="nm">Medias de lana</span><span class="vr">Oliva</span></li></ul><span class="cat-pop-cta">Ver esenciales <span>→</span></span></div></div>
         <div class="cat-meta"><span class="cat-name">Esenciales</span><span class="cat-desc">La base que combina con todo.</span></div>
       </a>
     </div>
@@ -142,7 +161,7 @@
           <p class="body-md">Lino, lana y denim en una misma paleta. Así nace un atuendo completo sin esfuerzo: cada pieza ya está pensada para convivir con el resto.</p>
           <p style="margin-top:30px"><a href="#elLook" class="link-arrow" data-magnetic>Ver el look completo →</a></p>
         </div>
-        <div class="pin-fig org" data-parallax data-speed="0.9"><img src="assets/img/2.png" alt="Retrato de perfil con tejido crudo y tapado de lino." data-parallax-img></div>
+        <div class="pin-fig" data-parallax data-speed="0.9"><img src="assets/img/2.png" alt="Retrato de perfil con tejido crudo y tapado de lino." data-parallax-img></div>
       </article>
       <!-- panel 2 -->
       <article class="pin-panel">
@@ -175,7 +194,7 @@
         <span class="reveal-line"><span>la <em>temporada.</em></span></span>
       </h2>
       <p class="body-lg" data-fade>Tejido de punto suave y con caída, en tres tonos de la misma paleta. La pieza que ancla toda la cápsula.</p>
-      <p style="margin-top:36px" data-fade><a href="#destacada" class="btn btn-primary" data-magnetic>Ver detalle <span class="arrow">→</span></a></p>
+      <p style="margin-top:36px" data-fade><a href="#destacada" class="btn btn-primary" id="ffDetailBtn" data-magnetic>Ver detalle <span class="arrow">→</span></a></p>
       <div class="featured-aside" data-fade id="ffSwatches">
         <button class="swatch-opt is-active" data-sw="0" type="button"><span class="swatch" style="background:var(--oxido)"></span> ÓXIDO</button>
         <button class="swatch-opt" data-sw="1" type="button"><span class="swatch" style="background:var(--arena)"></span> ARENA</button>
@@ -262,7 +281,7 @@
     <p data-fade>Nuevas piezas, ideas de combinación y acceso anticipado. Sin ruido.</p>
     <form class="news-form" data-fade onsubmit="return false">
       <input type="email" class="news-input" placeholder="Tu email" aria-label="Tu email">
-      <button type="submit" class="btn btn-primary" data-magnetic>Suscribirme <span class="arrow">→</span></button>
+      <button type="submit" class="btn btn-primary" data-magnetic data-demo>Suscribirme <span class="arrow">→</span></button>
     </form>
   </div>
 </section>
@@ -307,10 +326,84 @@
   </div>
 </footer>
 
+<!-- ===== Detalle de pieza (drawer) ===== -->
+<div class="sheet" id="ffDetail" aria-hidden="true">
+  <div class="sheet-scrim" data-close></div>
+  <aside class="sheet-panel" role="dialog" aria-modal="true" aria-label="Detalle del sweater">
+    <button class="sheet-close" type="button" data-close aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="sheet-scroll">
+      <span class="sheet-eyebrow sh-anim">PIEZA DESTACADA <span class="dot">·</span> AW26</span>
+      <h3 class="sheet-title sh-anim">Sweater <em>Greca</em></h3>
+      <p class="sheet-lead sh-anim">El punto que ancla la cápsula. Tejido denso y de caída noble, pensado para abrigar sin volumen y envejecer con gracia.</p>
+
+      <div class="sheet-colors sh-anim">
+        <span class="sheet-label">Tonos</span>
+        <div class="sheet-dots">
+          <span class="sw" style="background:var(--oxido)" title="Óxido"></span>
+          <span class="sw" style="background:var(--arena)" title="Arena"></span>
+          <span class="sw" style="background:var(--crema);box-shadow:inset 0 0 0 1px var(--tinta-15)" title="Crudo"></span>
+        </div>
+      </div>
+
+      <ul class="sheet-specs">
+        <li class="sh-anim"><span class="k">Composición</span><span class="v">70% lana merino · 30% lino</span></li>
+        <li class="sh-anim"><span class="k">Gramaje</span><span class="v">320 g/m², punto inglés</span></li>
+        <li class="sh-anim"><span class="k">Tejido</span><span class="v">Hecho a telar, en series cortas</span></li>
+        <li class="sh-anim"><span class="k">Horma</span><span class="v">Relajada, hombro caído</span></li>
+        <li class="sh-anim"><span class="k">Origen</span><span class="v">Tejido en Mendoza, Argentina</span></li>
+        <li class="sh-anim"><span class="k">Cuidado</span><span class="v">Lavar a mano en frío · secar en plano</span></li>
+      </ul>
+
+      <p class="sheet-note sh-anim">Cada pieza lleva el meandro griego tejido en el interior del cuello — la firma silenciosa de la casa.</p>
+
+      <div class="sheet-foot sh-anim">
+        <div class="sheet-price"><span class="lbl">Precio</span><span class="num">$ 148.000</span></div>
+        <button class="btn btn-primary" type="button" data-demo>Reservar pieza <span class="arrow">→</span></button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ===== Modal demo / contacto (VisualNova) ===== -->
+<div class="demo-modal" id="demoModal" aria-hidden="true">
+  <div class="demo-scrim" data-demo-close></div>
+  <div class="demo-card" role="dialog" aria-modal="true" aria-labelledby="demoTitle">
+    <button class="demo-close" type="button" data-demo-close aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <span class="demo-eyebrow">PÁGINA DEMO <span class="dot">·</span> VISUALNOVA</span>
+    <h3 class="demo-title" id="demoTitle">¿Querés una web <em>así</em>?</h3>
+    <p class="demo-lead">Esta página es una pieza de muestra creada por VisualNova. Si te gustó y querés una web a esta altura para tu marca, escribime por cualquiera de estos medios y la hacemos realidad.</p>
+
+    <div class="demo-contact">
+      <a class="demo-row" href="https://wa.me/5492613255666?text=Hola%20VisualNova%2C%20quiero%20mi%20web%20como%20la%20demo%20de%20GRECA%20%E2%80%94%20%C2%BFcharlamos%3F" target="_blank" rel="noopener">
+        <span class="demo-row-lbl">WhatsApp</span>
+        <span class="demo-row-val">+54 9 2613 25-5666</span>
+      </a>
+      <a class="demo-row" href="mailto:visualnova.contact@gmail.com?subject=Quiero%20mi%20web%20como%20la%20demo%20de%20GRECA&body=Hola%20VisualNova%2C%20quiero%20mi%20web%20como%20la%20demo%20de%20GRECA.">
+        <span class="demo-row-lbl">Email</span>
+        <span class="demo-row-val">visualnova.contact@gmail.com</span>
+      </a>
+      <div class="demo-row demo-row--static">
+        <span class="demo-row-lbl">Respuesta</span>
+        <span class="demo-row-val">En el día</span>
+      </div>
+    </div>
+
+    <div class="demo-actions">
+      <a class="btn btn-primary" href="https://wa.me/5492613255666?text=Hola%20VisualNova%2C%20quiero%20mi%20web%20como%20la%20demo%20de%20GRECA%20%E2%80%94%20%C2%BFcharlamos%3F" target="_blank" rel="noopener">Quiero mi web <span class="arrow">→</span></a>
+    </div>
+    <p class="demo-sign">VisualNova · Diseño &amp; desarrollo web</p>
+  </div>
+</div>
+
 <!-- ===== Libs ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
 <script src="greca.js"></script>
+<script src="greca-ui.js"></script>
 </body>
 </html>
