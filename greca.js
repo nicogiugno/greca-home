@@ -122,6 +122,25 @@
     });
   });
 
+  /* ---------- Logo GRECA: vuelve al tope con scroll suave (no salto instantáneo) ---------- */
+  (function wordmarkToTop(){
+    const word = document.querySelector('.wordmark');
+    if(!word) return;
+    word.addEventListener('click', e=>{
+      e.preventDefault();
+      // diferir un frame: Lenis cancela un scrollTo lanzado de forma síncrona dentro del click
+      requestAnimationFrame(()=>{
+        if(lenis){
+          const startY = lenis.scroll || window.scrollY;
+          const dur = Math.min(2.6, Math.max(1.0, startY / 1400));   // duración proporcional a la distancia
+          lenis.scrollTo(0, { duration: dur, easing: x => x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2 });  // easeInOutCubic
+        } else {
+          window.scrollTo({ top:0, behavior:'smooth' });             // táctil: scroll nativo suave
+        }
+      });
+    });
+  })();
+
   /* ---------- Scroll-spy: marca la sección activa en el menú ---------- */
   (function scrollSpy(){
     const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"], .mobile-menu .mm-link'));
@@ -242,9 +261,9 @@
     // Capas de profundidad: el fondo es más tenue/fino/lento; el frente, un punto más presente.
     const isPhone = window.innerWidth < 700;
     const LAYERS = [
-      { count: isPhone? 5:8, width:0.6,  alpha:0.055, amp:5,  speed:0.10, parallax:0.018 },
-      { count: isPhone? 5:8, width:0.85, alpha:0.082, amp:8,  speed:0.13, parallax:0.040 },
-      { count: isPhone? 4:7, width:1.1,  alpha:0.120, amp:12, speed:0.16, parallax:0.075 }
+      { count: isPhone? 5:8, width:0.6,  alpha:0.018, amp:5,  speed:0.10, parallax:0.018 },
+      { count: isPhone? 5:8, width:0.85, alpha:0.026, amp:8,  speed:0.13, parallax:0.040 },
+      { count: isPhone? 4:7, width:1.1,  alpha:0.038, amp:12, speed:0.16, parallax:0.075 }
     ];
     let threads = [];
 
@@ -320,6 +339,7 @@
         const pts = th.pts, n = pts.length;
         const par = -scrollY * th.parallax;            // deriva lenta al hacer scroll
         const kf  = (th.layer+1)/3;                    // el frente reacciona más
+        let gmax = 0;                                  // máx. influencia del cursor en este hilo
         for(let k=0;k<n;k++){
           const p = pts[k];
           // respiración ambiente: onda viajera lenta (la tela respira)
@@ -333,6 +353,7 @@
             if(infl>0.001){
               ty -= infl*LIFT*kf;                      // se levanta hacia la corriente
               tx += (ddx>=0?1:-1)*infl*LIFT*0.42*kf;   // y se abre a los lados
+              if(infl>gmax) gmax = infl;               // el hilo se ilumina cerca del cursor
             }
           }
           // easing lento hacia el objetivo → retorno suave al soltar
@@ -349,7 +370,8 @@
           ctx.quadraticCurveTo(pts[k].fx, pts[k].fy, mpx, mpy);
         }
         ctx.quadraticCurveTo(pts[n-2].fx, pts[n-2].fy, pts[n-1].fx, pts[n-1].fy);
-        ctx.lineWidth = th.w; ctx.strokeStyle = `rgba(${th.color},${th.alpha})`;
+        ctx.lineWidth = th.w*(1 + gmax*0.5);                          // un punto más de cuerpo bajo la luz
+        ctx.strokeStyle = `rgba(${th.color},${th.alpha + gmax*0.05})`; // y más presencia: se ilumina cerca del cursor
         ctx.globalAlpha = 1; ctx.stroke();
       }
     }
@@ -394,18 +416,16 @@
   // que los ScrollTriggers (reveals, parallax, scrubs) se actualicen igualmente.
   if(!FINE) addEventListener('scroll', ()=> ScrollTrigger.update(), { passive:true });
 
-  /* ---- Hero intro: liquid mask reveal + line reveal + ctas ---- */
+  /* ---- Hero intro: model reveal + line reveal + ctas ---- */
   const introTl = gsap.timeline({ defaults:{ ease:'power4.out' }, delay:0.15 });
-  // hero mask organic open
-  const mask = document.getElementById('heroMask');
-  const heroImg = document.querySelector('#heroCarousel .hero-slide');
-  if(mask){
+  // la modelo aparece: fade + sube desde un recorte inferior (sin tocar transform → no choca con el parallax)
+  const heroModelEl = document.getElementById('heroModel');
+  if(heroModelEl){
     if(REDUCED){
-      gsap.set(mask,{clipPath:'inset(0 0 0 0)',opacity:1});
+      gsap.set(heroModelEl,{ opacity:1 });
     } else {
-      gsap.set(mask,{ clipPath:'inset(38% 30% 38% 30% round 50%)', opacity:0 });
-      introTl.to(mask, { clipPath:'inset(0% 0% 0% 0% round 48% 48% 9% 9% / 34% 34% 6% 6%)', opacity:1, duration:1.5, ease:'expo.out' }, 0);
-      introTl.from(heroImg, { scale:1.28, duration:1.8, ease:'expo.out' }, 0);
+      gsap.set(heroModelEl,{ opacity:0, clipPath:'inset(0% 0% 14% 0%)' });
+      introTl.to(heroModelEl, { opacity:1, clipPath:'inset(0% 0% 0% 0%)', duration:1.5, ease:'expo.out', clearProps:'clipPath' }, 0.1);
     }
   }
   // hero h1 lines
@@ -423,86 +443,54 @@
     if(!document.hidden && introTl.progress() < 1) introTl.progress(1);
   });
 
-  /* ---- Hero carousel: crossfade contemplativo + Ken Burns dentro de la máscara ---- */
-  (function heroCarousel(){
-    const car = document.getElementById('heroCarousel');
-    if(!car) return;
-    const slides = Array.from(car.querySelectorAll('.hero-slide'));
-    const dots = Array.from(document.querySelectorAll('#heroDots span'));
-    if(REDUCED || slides.length < 2){
-      // estado base: solo la primera visible, nada se mueve
-      slides.forEach((s,i)=> gsap.set(s,{ opacity:i===0?1:0 }));
-      return;
+  /* ---- Hero · modelo: parallax (scroll + puntero) + luz que sigue el cursor ---- */
+  (function heroModel(){
+    const model = document.getElementById('heroModel');
+    const inner = document.getElementById('heroModelInner');
+    const base  = model && model.querySelector('.hm-base');
+    const hero  = document.getElementById('top');
+    if(!model || !inner || !base || !hero) return;
+
+    // parallax de scroll (sutil) — todos salvo reduced-motion
+    if(!REDUCED){
+      gsap.to(model, {
+        yPercent:-7, ease:'none',
+        scrollTrigger:{ trigger:hero, start:'top top', end:'bottom top', scrub:true }
+      });
     }
 
-    const HOLD = 5.5;   // s en pantalla por slide
-    const CROSS = 1.6;  // s de crossfade
-    const isMobile = ()=> window.matchMedia('(max-width:880px)').matches;
+    // luz + parallax de puntero: sólo desktop con puntero fino
+    if(!FINE || REDUCED) return;
 
-    let idx = 0, call = null, visible = true, hovering = false;
+    // capa iluminada = clon de la base, revelada por una máscara radial en el cursor
+    const lit = base.cloneNode(true);
+    lit.className = 'hero-model-img hm-lit';
+    lit.setAttribute('aria-hidden','true');
+    lit.removeAttribute('fetchpriority');
+    inner.appendChild(lit);
 
-    // estados iniciales (la slide 0 la maneja el intro: 1.28 → 1.06)
-    slides.forEach((s,i)=> gsap.set(s,{ opacity:i===0?1:0, xPercent:0, yPercent:0 }));
-
-    function kenBurns(slide, i, fromCurrent){
-      const dir = i % 2 === 0 ? 1 : -1;
-      const kb = isMobile() ? 1.04 : 1.06;          // Ken Burns más sutil en mobile
-      if(fromCurrent){
-        gsap.to(slide, { scale:kb + 0.04, xPercent:1.4*dir, yPercent:-1*dir,
-          duration:HOLD + CROSS, ease:'none', overwrite:'auto' });
-      } else {
-        gsap.fromTo(slide,
-          { scale:1.0, xPercent:-1.4*dir, yPercent:1*dir },
-          { scale:kb, xPercent:1.4*dir, yPercent:-1*dir, duration:HOLD + CROSS, ease:'none', overwrite:'auto' });
-      }
+    let tx=0, ty=0, cx=0, cy=0, raf=null;
+    function apply(){
+      cx += (tx-cx)*0.12; cy += (ty-cy)*0.12;
+      inner.style.transform = `translate(${cx.toFixed(2)}px, ${cy.toFixed(2)}px)`;
+      raf = (Math.abs(tx-cx)>0.1 || Math.abs(ty-cy)>0.1) ? requestAnimationFrame(apply) : null;
     }
-
-    function setDots(i){
-      dots.forEach((d,n)=> d.classList.toggle('is-active', n===i));
-    }
-
-    function advance(){
-      const cur = slides[idx];
-      const next = (idx + 1) % slides.length;
-      const nxt = slides[next];
-      gsap.to(cur, { opacity:0, duration:CROSS, ease:'power2.inOut', overwrite:'auto' });
-      gsap.to(nxt, { opacity:1, duration:CROSS, ease:'power2.inOut', overwrite:'auto' });
-      kenBurns(nxt, next, false);
-      idx = next;
-      setDots(idx);
-      queueNext();
-    }
-
-    function queueNext(){
-      if(call) call.kill();
-      call = gsap.delayedCall(HOLD, advance);
-      if(!visible || hovering) call.pause();
-    }
-
-    function updatePause(){
-      if(!call) return;
-      (visible && !hovering) ? call.resume() : call.pause();
-    }
-
-    // pausa fuera del viewport
-    if('IntersectionObserver' in window){
-      new IntersectionObserver((ents)=>{
-        visible = ents[0].isIntersecting;
-        updatePause();
-      }, { threshold:0.15 }).observe(car);
-    }
-    // pausa muy sutil al pasar el cursor (no rompe el ritmo)
-    if(FINE){
-      car.addEventListener('pointerenter', ()=>{ hovering = true; updatePause(); });
-      car.addEventListener('pointerleave', ()=>{ hovering = false; updatePause(); });
-    }
-
-    // arranca DESPUÉS del reveal de entrada de la máscara.
-    // La primera slide se sostiene menos para que el carrusel "tome vida" pronto.
-    gsap.delayedCall(2.2, ()=>{
-      kenBurns(slides[0], 0, true);
-      call = gsap.delayedCall(2.4, advance);
-      if(!visible || hovering) call.pause();
+    hero.addEventListener('mousemove', e=>{
+      const br = base.getBoundingClientRect();
+      if(br.width < 2) return;
+      // luz: relativa a la caja real de la foto → coincide exacta con la capa iluminada
+      inner.style.setProperty('--mx', ((e.clientX - br.left)/br.width*100).toFixed(1)+'%');
+      inner.style.setProperty('--my', ((e.clientY - br.top)/br.height*100).toFixed(1)+'%');
+      // parallax de puntero: leve desplazamiento contrario al cursor (relativo al hero-model)
+      const mr = model.getBoundingClientRect();
+      tx = -((e.clientX - (mr.left + mr.width/2))/mr.width)*22;
+      ty = -((e.clientY - (mr.top + mr.height/2))/mr.height)*14;
+      if(!raf) raf = requestAnimationFrame(apply);
+    });
+    hero.addEventListener('mouseenter', ()=> model.classList.add('is-lit'));
+    hero.addEventListener('mouseleave', ()=>{
+      model.classList.remove('is-lit');
+      tx=0; ty=0; if(!raf) raf = requestAnimationFrame(apply);
     });
   })();
 
@@ -724,7 +712,7 @@
   }
 
   // refrescar posiciones cuando imágenes que cambian altura terminan de cargar
-  document.querySelectorAll('#featuredFig img, #valoresFig img, #heroMask img').forEach(im=>{
+  document.querySelectorAll('#featuredFig img, #valoresFig img, #heroModel img').forEach(im=>{
     if(!im.complete) im.addEventListener('load', ()=> ScrollTrigger.refresh(), {once:true});
   });
 
